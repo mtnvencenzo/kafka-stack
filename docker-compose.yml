@@ -29,6 +29,7 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
     volumes:
       - "${HOME}/mnt/kafka-stack/kafka-1-data:/var/lib/kafka/data"
+    restart: unless-stopped
     networks:
       - kafka-stack
 
@@ -56,6 +57,7 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
     volumes:
       - "${HOME}/mnt/kafka-stack/kafka-2-data:/var/lib/kafka/data"
+    restart: unless-stopped
     networks:
       - kafka-stack
 
@@ -83,6 +85,7 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
     volumes:
       - "${HOME}/mnt/kafka-stack/kafka-3-data:/var/lib/kafka/data"
+    restart: unless-stopped
     networks:
       - kafka-stack
 
@@ -94,6 +97,7 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+    restart: unless-stopped
     depends_on:
       - kafka-1
       - kafka-2
