@@ -31,6 +31,8 @@ All containers run within a dedicated `kafka-stack` Docker bridge network for in
 
 0.1 Create local directories for persistent data:
   ```bash
+  mkdir -p "${HOME}/mnt"
+  mkdir -p "${HOME}/mnt/kafka-stack"
   mkdir -p "${HOME}/mnt/kafka-stack/kafka-1-data"
   mkdir -p "${HOME}/mnt/kafka-stack/kafka-2-data"
   mkdir -p "${HOME}/mnt/kafka-stack/kafka-3-data"
