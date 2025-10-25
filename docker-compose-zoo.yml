@@ -1,0 +1,97 @@
+name: kafka-stack
+
+networks:
+  kafka-stack:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.6
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: 'yes'
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: nc -z localhost 2181 || exit -1
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    volumes:
+      - "${HOME}/mnt/kafka-stack/zookeeper/zk-data:/var/lib/zookeeper/data"
+      - "${HOME}/mnt/kafka-stack/zookeeper/zk-txn-logs:/var/lib/zookeeper/log"
+    networks:
+      - kafka-stack
+
+  broker:
+    image: confluentinc/cp-kafka:7.7.6
+    hostname: broker
+    container_name: broker
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: kafka-topics --bootstrap-server broker:9092 --list
+      interval: 30s
+      timeout: 10s
+      retries: 25
+    restart: unless-stopped
+    volumes:
+      - "${HOME}/mnt/kafka-stack/broker:/var/lib/kafka/data"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - kafka-stack
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.7.6
+    hostname: schema-registry
+    container_name: schema-registry
+    ports:
+      - '8988:8081'
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://broker:29092
+      SCHEMA_REGISTRY_DEBUG: 'true'
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    networks:
+      - kafka-stack
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8088:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY_URL: http://schema-registry:8081
+      KAFKA_BROKERCONNECT: broker:9092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    networks:
+      - kafka-stack

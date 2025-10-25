@@ -1,13 +1,18 @@
+
 # Kafka Stack - Local Kafka Environment
 
+This repository provides a Docker Compose setup for running a local Kafka environment in **two modes**:
+- **KRaft mode** (no Zookeeper required, modern Kafka architecture)
+- **Zookeeper mode** (classic Kafka architecture with Schema Registry)
 
-This repository provides a Docker Compose setup for running a local Kafka environment using modern Kafka KRaft mode (no Zookeeper required). It includes a multi-broker Kafka cluster and a web-based Kafka UI for easy management and monitoring.
+Both modes include a web-based Kafka UI for easy management and monitoring.
 
-![Kafka Stack](./assets/kafka-stack.drawio.svg)
+
 
 ## 📁 Contents
 
 - `docker-compose.yml`: Docker Compose configuration for a KRaft-based (no Zookeeper) Kafka cluster
+- `docker-compose-zoo.yml`: Docker Compose configuration for a classic Zookeeper-based Kafka cluster with Schema Registry
 - `assets/`: Architecture diagram
 - `README.md`: This documentation file
 
@@ -17,10 +22,21 @@ This repository provides a Docker Compose setup for running a local Kafka enviro
 
 ## 🏗️ Architecture
 
-The stack provides the following services:
-
+### KRaft Mode (No Zookeeper)
 - **Kafka (KRaft mode)**: Distributed event streaming platform and message broker, running in KRaft (Kafka Raft) mode with no Zookeeper dependency. Three brokers are started for high availability and replication.
 - **Kafka UI**: Web-based interface for managing Kafka topics, consumers, and monitoring cluster health.
+
+![Kafka Stack](./assets/kafka-stack-kraft.drawio.svg)
+
+### Zookeeper Mode (Classic)
+- **Zookeeper**: Centralized service for maintaining configuration information and providing distributed synchronization.
+- **Kafka Broker**: Classic Kafka broker connected to Zookeeper.
+- **Schema Registry**: Service for managing Avro schemas for Kafka topics.
+- **Kafka UI**: Web-based interface for managing Kafka topics, consumers, and monitoring cluster health.
+
+<br/>
+
+![Kafka Stack](./assets/kafka-stack-zoo.drawio.svg)
 
 All containers run within a dedicated `kafka-stack` Docker bridge network for inter-service communication.
 
@@ -28,44 +44,75 @@ All containers run within a dedicated `kafka-stack` Docker bridge network for in
 
 > This setup is designed for local development and learning. Do not use in production environments.
 
+### 0.1 Create local directories for persistent data:
+```bash
+# For KRaft mode (docker-compose.yml)
+mkdir -p "${HOME}/mnt/kafka-stack/kafka-1-data"
+mkdir -p "${HOME}/mnt/kafka-stack/kafka-2-data"
+mkdir -p "${HOME}/mnt/kafka-stack/kafka-3-data"
 
-0.1 Create local directories for persistent data:
-  ```bash
-  mkdir -p "${HOME}/mnt"
-  mkdir -p "${HOME}/mnt/kafka-stack"
-  mkdir -p "${HOME}/mnt/kafka-stack/kafka-1-data"
-  mkdir -p "${HOME}/mnt/kafka-stack/kafka-2-data"
-  mkdir -p "${HOME}/mnt/kafka-stack/kafka-3-data"
-  ```
+# For Zookeeper mode (docker-compose-zoo.yml)
+mkdir -p "${HOME}/mnt/kafka-stack/broker"
+mkdir -p "${HOME}/mnt/kafka-stack/zookeeper/zk-data"
+mkdir -p "${HOME}/mnt/kafka-stack/zookeeper/zk-txn-logs"
+```
 
-1. Start the Kafka stack services:
-  ```bash
-  docker compose -p kafka-stack -f docker-compose.yml up -d
-  ```
+---
 
-2. **Stop the services:**
-  ```bash
-  docker compose -p kafka-stack -f docker-compose.yml down -v
-  ```
+### 1. Start the Kafka stack services
 
-3. **Rebuild and restart a specific service:**
-  ```bash
-  docker compose -p kafka-stack -f docker-compose.yml up -d --force-recreate --no-deps --build <service_name>
-  ```
+#### KRaft mode:
+```bash
+docker compose -p kafka-stack -f docker-compose.yml up -d
+```
 
-4. **Check all services status:**
-  ```bash
-  docker compose ps
-  ```
+#### Zookeeper mode:
+```bash
+docker compose -p kafka-stack -f docker-compose-zoo.yml up -d
+```
+
+---
+
+### 2. Stop the services
+
+#### KRaft mode:
+```bash
+docker compose -p kafka-stack -f docker-compose.yml down -v
+```
+
+#### Zookeeper mode:
+```bash
+docker compose -p kafka-stack -f docker-compose-zoo.yml down -v
+```
+
+---
+
+### 3. Rebuild and restart a specific service
+
+#### KRaft mode:
+```bash
+docker compose -p kafka-stack -f docker-compose.yml up -d --force-recreate --no-deps --build <service_name>
+```
+
+#### Zookeeper mode:
+```bash
+docker compose -p kafka-stack -f docker-compose-zoo.yml up -d --force-recreate --no-deps --build <service_name>
+```
+
+---
+
+### 4. Check all services status
+```bash
+docker compose ps
+```
 
 ## 🛠️ Customization
 
-- Modify `docker-compose.yml` to adjust service settings, ports, or environment variables.
+- Modify the relevant compose file to adjust service settings, ports, or environment variables.
 
 ## 📊 Service Endpoints & Ports
 
-
-### Kafka (KRaft mode)
+### KRaft Mode (`docker-compose.yml`)
 Distributed event streaming platform and message broker (no Zookeeper required).
 
 - **Docs:** [Kafka KRaft mode](https://kafka.apache.org/documentation/#kraft)
@@ -73,12 +120,21 @@ Distributed event streaming platform and message broker (no Zookeeper required).
   - Broker 1: `9092` (host) → `9092` (container)
   - Broker 2: `9094` (host) → `9092` (container)
   - Broker 3: `9096` (host) → `9092` (container)
+- **Kafka UI:** [http://localhost:8088](http://localhost:8088)
 
-### Kafka UI
-Web-based interface for managing Kafka topics, consumers, and monitoring cluster health.
+---
 
-- **Docs:** [Kafka UI](https://github.com/provectus/kafka-ui)
-- **UI:** [http://localhost:8088](http://localhost:8088)
+### Zookeeper Mode (`docker-compose-zoo.yml`)
+Classic Kafka stack with Zookeeper and Schema Registry.
+
+- **Docs:** [Kafka with Zookeeper](https://docs.confluent.io/platform/current/installation/docker/docs/quickstart.html)
+- **Ports:**
+  - Zookeeper: `2181` (host) → `2181` (container)
+  - Broker: `9092` (host) → `9092` (container), `29092` (host) → `29092` (container)
+  - Schema Registry: `8988` (host) → `8081` (container)
+- **Kafka UI:** [http://localhost:8088](http://localhost:8088)
+
+---
 
 ## 🐞 Troubleshooting
 
@@ -86,7 +142,7 @@ Web-based interface for managing Kafka topics, consumers, and monitoring cluster
   ```bash
   docker compose logs -f <service>
   ```
-- If Kafka UI cannot connect, ensure all Kafka brokers are running and healthy.
+- If Kafka UI cannot connect, ensure all Kafka brokers (and Zookeeper, if using classic mode) are running and healthy.
 - Reset stack state:
   ```bash
   docker compose down -v
@@ -95,8 +151,8 @@ Web-based interface for managing Kafka topics, consumers, and monitoring cluster
 ## ⚙️ Configuration Insights
 
 - All services are connected via the `kafka-stack` Docker bridge network.
-- Ports can be changed in `docker-compose.yml` as needed.
-- Service dependencies are managed via `depends_on` in the compose file.
+- Ports can be changed in the relevant compose file as needed.
+- Service dependencies are managed via `depends_on` in the compose files.
 
 ## 🌐 Community & Support
 
