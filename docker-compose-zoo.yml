@@ -1,9 +1,5 @@
 name: kafka-stack
 
-networks:
-  kafka-stack:
-    driver: bridge
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.6
@@ -22,8 +18,8 @@ services:
       retries: 20
     restart: unless-stopped
     volumes:
-      - "${HOME}/mnt/kafka-stack/zookeeper/zk-data:/var/lib/zookeeper/data"
-      - "${HOME}/mnt/kafka-stack/zookeeper/zk-txn-logs:/var/lib/zookeeper/log"
+      - vol_zookeeper_data:/var/lib/zookeeper/data
+      - vol_zookeeper_txn:/var/lib/zookeeper/log
     networks:
       - kafka-stack
 
@@ -47,7 +43,7 @@ services:
       retries: 25
     restart: unless-stopped
     volumes:
-      - "${HOME}/mnt/kafka-stack/broker:/var/lib/kafka/data"
+      - vol_kafka:/var/lib/kafka/data
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -95,3 +91,13 @@ services:
         condition: service_healthy
     networks:
       - kafka-stack
+
+
+networks:
+  kafka-stack:
+    driver: bridge
+
+volumes:
+  vol_zookeeper_data:
+  vol_zookeeper_txn:
+  vol_kafka:

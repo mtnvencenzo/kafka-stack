@@ -1,9 +1,5 @@
 name: kafka-stack
 
-networks:
-  kafka-stack:
-    driver: bridge
-
 services:
   kafka-1:
     image: confluentinc/cp-kafka:8.1.0
@@ -28,7 +24,7 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
     volumes:
-      - "${HOME}/mnt/kafka-stack/kafka-1-data:/var/lib/kafka/data"
+      - vol_kafka1:/var/lib/kafka/data
     restart: unless-stopped
     networks:
       - kafka-stack
@@ -56,7 +52,7 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
     volumes:
-      - "${HOME}/mnt/kafka-stack/kafka-2-data:/var/lib/kafka/data"
+      - vol_kafka2:/var/lib/kafka/data
     restart: unless-stopped
     networks:
       - kafka-stack
@@ -84,7 +80,7 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
     volumes:
-      - "${HOME}/mnt/kafka-stack/kafka-3-data:/var/lib/kafka/data"
+      - vol_kafka3:/var/lib/kafka/data
     restart: unless-stopped
     networks:
       - kafka-stack
@@ -104,3 +100,12 @@ services:
       - kafka-3
     networks:
       - kafka-stack
+
+networks:
+  kafka-stack:
+    driver: bridge
+
+volumes:
+  vol_kafka1:
+  vol_kafka2:
+  vol_kafka3:

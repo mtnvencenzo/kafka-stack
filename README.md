@@ -44,19 +44,6 @@ All containers run within a dedicated `kafka-stack` Docker bridge network for in
 
 > This setup is designed for local development and learning. Do not use in production environments.
 
-### 0.1 Create local directories for persistent data:
-```bash
-# For KRaft mode (docker-compose.yml)
-mkdir -p "${HOME}/mnt/kafka-stack/kafka-1-data"
-mkdir -p "${HOME}/mnt/kafka-stack/kafka-2-data"
-mkdir -p "${HOME}/mnt/kafka-stack/kafka-3-data"
-
-# For Zookeeper mode (docker-compose-zoo.yml)
-mkdir -p "${HOME}/mnt/kafka-stack/broker"
-mkdir -p "${HOME}/mnt/kafka-stack/zookeeper/zk-data"
-mkdir -p "${HOME}/mnt/kafka-stack/zookeeper/zk-txn-logs"
-```
-
 ---
 
 ### 1. Start the Kafka stack services
